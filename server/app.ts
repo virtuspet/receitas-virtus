@@ -27,12 +27,20 @@ app.use("*", async (c, next) => {
 
 // ---------- POST /api/extract ----------
 app.post("/extract", async (c) => {
+  // Log síncrono, antes de tentar ler o corpo — se o parsing travar,
+  // isto ainda assim aparece no log e mostra o tamanho declarado.
+  console.log(`[extract] entrou · content-length=${c.req.header("content-length") ?? "?"}`);
   if (!iaConfigurada()) {
     return c.json({ error: "Leitura automática não configurada no servidor." }, 503);
   }
+  const t0body = Date.now();
   const body = await c.req
     .json<{ base64?: string; mimeType?: string }>()
-    .catch(() => ({}) as { base64?: string; mimeType?: string });
+    .catch((e) => {
+      console.error("[extract] falha ao ler o corpo:", e);
+      return {} as { base64?: string; mimeType?: string };
+    });
+  console.log(`[extract] corpo lido em ${Date.now() - t0body}ms`);
   if (!body.base64 || !body.mimeType) {
     return c.json({ error: "Envie base64 e mimeType." }, 400);
   }
