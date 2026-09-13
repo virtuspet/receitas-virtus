@@ -111,7 +111,11 @@ export async function extrairReceita(base64: string, mimeType: string): Promise<
           },
         ],
       },
-      { timeout: 50_000 },
+      // maxRetries: 0 é essencial aqui — por padrão o SDK reforça timeouts
+      // (eles contam como erro de conexão), e um retry depois de 45s estoura
+      // os 60s da função na Vercel: a plataforma mata tudo antes da gente
+      // conseguir devolver um erro decente. Preferimos falhar rápido e claro.
+      { timeout: 45_000, maxRetries: 0 },
     );
   } catch (err) {
     if (err instanceof Anthropic.RateLimitError) {

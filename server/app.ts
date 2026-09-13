@@ -46,7 +46,12 @@ app.post("/extract", async (c) => {
   }
   try {
     const t0 = Date.now();
-    const r = await extrairReceita(body.base64, body.mimeType);
+    // Watchdog manual: garante uma resposta JSON antes dos 60s da função na
+    // Vercel matarem tudo sem explicação, não importa o que travar por baixo.
+    const prazo = new Promise<never>((_, rej) =>
+      setTimeout(() => rej(new ExtracaoError("A leitura demorou demais e foi interrompida.", "upstream")), 48_000),
+    );
+    const r = await Promise.race([extrairReceita(body.base64, body.mimeType), prazo]);
     console.log(`[extract] ok em ${Date.now() - t0}ms — tokens ${r.usoTokens.entrada}/${r.usoTokens.saida}`);
     return c.json({ dados: r.dados, bruto: r.bruto, uso: r.usoTokens });
   } catch (err) {
