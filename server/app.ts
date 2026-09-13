@@ -44,15 +44,27 @@ app.post("/extract", async (c) => {
   if (!body.base64 || !body.mimeType) {
     return c.json({ error: "Envie base64 e mimeType." }, 400);
   }
+  const kb = Math.round((body.base64.length * 0.75) / 1024);
+  console.log(`[extract] recebido: ${body.mimeType}, ~${kb}KB`);
+  if (kb > 4000) {
+    return c.json(
+      { error: "Arquivo grande demais para a leitura automática (limite ~4MB). Tente uma foto em vez do PDF, ou comprima o arquivo." },
+      413,
+    );
+  }
   try {
+    const t0 = Date.now();
     const r = await extrairReceita(body.base64, body.mimeType);
+    console.log(`[extract] ok em ${Date.now() - t0}ms — tokens ${r.usoTokens.entrada}/${r.usoTokens.saida}`);
     return c.json({ dados: r.dados, bruto: r.bruto, uso: r.usoTokens });
   } catch (err) {
     if (err instanceof ExtracaoError) {
+      console.error(`[extract] ExtracaoError(${err.code}): ${err.message}`);
       const status = err.code === "rate_limited" ? 429 : err.code === "upstream" ? 502 : 422;
       return c.json({ error: err.message, code: err.code }, status);
     }
-    return c.json({ error: "Falha inesperada na leitura." }, 500);
+    console.error("[extract] erro inesperado:", err);
+    return c.json({ error: "Falha inesperada na leitura.", detail: String((err as Error)?.message ?? err) }, 500);
   }
 });
 
