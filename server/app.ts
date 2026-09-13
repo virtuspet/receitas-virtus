@@ -15,17 +15,9 @@ app.use("*", cors());
 
 app.get("/health", (c) => c.json({ ok: true, ia: iaConfigurada() }));
 
-// TEMP: diagnóstico de timeout da função na Vercel — remover depois.
-app.get("/_sleep", async (c) => {
-  const ms = Math.min(Number(c.req.query("ms") ?? "5000"), 120000);
-  const t0 = Date.now();
-  await new Promise((r) => setTimeout(r, ms));
-  return c.json({ ok: true, pedido: ms, real: Date.now() - t0 });
-});
-
 // ---------- auth middleware ----------
 app.use("*", async (c, next) => {
-  if (c.req.path === "/api/health" || c.req.path === "/api/_sleep") return next();
+  if (c.req.path === "/api/health") return next();
   const auth = await verificarUsuario(c.req.header("Authorization"));
   if (!auth) return c.json({ error: "Não autenticado" }, 401);
   c.set("user", auth.user);

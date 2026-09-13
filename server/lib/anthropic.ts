@@ -96,22 +96,35 @@ export async function extrairReceita(base64: string, mimeType: string): Promise<
 
   let msg: Anthropic.Message;
   try {
-    msg = await client().messages.create({
-      model: env.anthropicModel,
-      max_tokens: 4000,
-      messages: [
-        {
-          role: "user",
-          content: [fileBlock, { type: "text", text: EXTRACT_PROMPT }],
-        },
-      ],
-    });
+    msg = await client().messages.create(
+      {
+        model: env.anthropicModel,
+        max_tokens: 4000,
+        // "low": leitura estruturada de um documento não precisa do raciocínio
+        // profundo do padrão — isso corta bastante o tempo de resposta (a função
+        // na Vercel tem 60s de limite) sem perder precisão na extração.
+        output_config: { effort: "low" },
+        messages: [
+          {
+            role: "user",
+            content: [fileBlock, { type: "text", text: EXTRACT_PROMPT }],
+          },
+        ],
+      },
+      { timeout: 50_000 },
+    );
   } catch (err) {
     if (err instanceof Anthropic.RateLimitError) {
       throw new ExtracaoError("Limite de uso da API atingido.", "rate_limited");
     }
     if (err instanceof Anthropic.BadRequestError) {
       throw new ExtracaoError(err.message, "arquivo_invalido");
+    }
+    if (err instanceof Anthropic.APIConnectionTimeoutError || /timeout|timed out/i.test(String((err as Error)?.message))) {
+      throw new ExtracaoError(
+        "A leitura demorou mais que o esperado. Tente uma foto mais nítida, com boa luz e reta, ou tente de novo.",
+        "upstream",
+      );
     }
     throw new ExtracaoError(
       err instanceof Error ? err.message : "Falha ao chamar a API.",
