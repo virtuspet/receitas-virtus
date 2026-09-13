@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { db, verificarUsuario, type AuthUser } from "./lib/supabase.js";
 import { env, iaConfigurada } from "./lib/env.js";
 import { extrairReceita, ExtracaoError } from "./lib/anthropic.js";
+import { casarItem } from "./lib/catalogo.js";
+import { gerarExportXlsx } from "./lib/export.js";
 import { brDateToISO } from "../shared/domain.js";
 import type { NovaReceita, Receita } from "../shared/types.js";
 
@@ -88,6 +90,23 @@ app.get("/receitas", async (c) => {
   return c.json({ receitas: data as Receita[] });
 });
 
+// ---------- GET /api/export — planilha com tudo que foi coletado ----------
+app.get("/export", async (c) => {
+  const { data, error } = await c
+    .get("sb")
+    .from("receita")
+    .select("*, itens:receita_item(*)")
+    .order("data_recebimento", { ascending: false })
+    .limit(5000);
+  if (error) return c.json({ error: error.message }, 500);
+
+  const buf = await gerarExportXlsx(data as Receita[]);
+  const hoje = new Date().toISOString().slice(0, 10);
+  c.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  c.header("Content-Disposition", `attachment; filename="conexao-360-${hoje}.xlsx"`);
+  return c.body(new Uint8Array(buf));
+});
+
 // ---------- GET /api/receitas/:id ----------
 app.get("/receitas/:id", async (c) => {
   const sb = c.get("sb");
@@ -168,18 +187,23 @@ app.post("/receitas", async (c) => {
 
   if (body.itens.length > 0) {
     const { error: e2 } = await sb.from("receita_item").insert(
-      body.itens.map((it) => ({
-        receita_id: receita.id,
-        principio_ativo: it.principio_ativo,
-        nome_comercial: it.nome_comercial,
-        concentracao: it.concentracao,
-        forma: it.forma,
-        via: it.via,
-        frequencia: it.frequencia,
-        duracao_dias: it.duracao_dias,
-        quantidade: it.quantidade,
-        retencao: it.retencao,
-      })),
+      body.itens.map((it) => {
+        const match = casarItem(it.nome_comercial, it.principio_ativo);
+        return {
+          receita_id: receita.id,
+          principio_ativo: it.principio_ativo,
+          nome_comercial: it.nome_comercial,
+          concentracao: it.concentracao,
+          forma: it.forma,
+          via: it.via,
+          frequencia: it.frequencia,
+          duracao_dias: it.duracao_dias,
+          quantidade: it.quantidade,
+          retencao: it.retencao,
+          fornecedor: match?.fornecedor ?? null,
+          categoria: match?.categoria ?? null,
+        };
+      }),
     );
     if (e2) return c.json({ error: e2.message }, 500);
   }

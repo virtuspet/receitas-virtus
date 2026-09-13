@@ -112,7 +112,7 @@ export function App() {
             onToast={mostrarToast}
           />
         ) : (
-          <Dashboard receitas={receitas} onAbrir={setModalId} />
+          <Dashboard receitas={receitas} onAbrir={setModalId} onToast={mostrarToast} />
         )}
       </main>
 

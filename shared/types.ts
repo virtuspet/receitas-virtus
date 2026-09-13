@@ -42,6 +42,8 @@ export interface ReceitaItem {
   frequencia: string | null;
   duracao_dias: number | null;
   quantidade: string | null;
+  fornecedor: string | null;
+  categoria: string | null;
   retencao: boolean;
 }
 
@@ -82,7 +84,8 @@ export interface NovaReceita {
   animal_peso_kg: string | null;
   tutor_nome: string | null;
   origem: "foto" | "arquivo";
-  itens: Array<Omit<ReceitaItem, "id">>;
+  // fornecedor/categoria não vêm do cliente — o servidor casa com o catálogo ao salvar
+  itens: Array<Omit<ReceitaItem, "id" | "fornecedor" | "categoria">>;
   // imagem/arquivo original em base64 (sem prefixo data:)
   arquivo?: { base64: string; mimeType: string } | null;
   // resposta crua da IA, para auditoria

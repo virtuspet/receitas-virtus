@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Receita } from "../../shared/types.js";
 import { fmt, fmt1, diaMes } from "../lib/format.js";
+import { api } from "../lib/api.js";
 import {
   filtrar,
   kpis as calcKpis,
@@ -10,7 +11,7 @@ import {
   type Periodo,
   type FiltroEspecie,
 } from "../lib/aggregate.js";
-import { TimeSeries, RankBars, Proportion } from "./charts.js";
+import { TimeSeries, RankBars } from "./charts.js";
 
 const PERIODOS: { v: Periodo; label: string }[] = [
   { v: "30", label: "30 dias" },
@@ -27,12 +28,15 @@ const ESPECIES: { v: FiltroEspecie; label: string }[] = [
 export function Dashboard({
   receitas,
   onAbrir,
+  onToast,
 }: {
   receitas: Receita[];
   onAbrir: (id: string) => void;
+  onToast: (m: string) => void;
 }) {
   const [periodo, setPeriodo] = useState<Periodo>("30");
   const [especie, setEspecie] = useState<FiltroEspecie>("all");
+  const [exportando, setExportando] = useState(false);
 
   const rows = useMemo(() => filtrar(receitas, periodo, especie), [receitas, periodo, especie]);
   const k = useMemo(() => calcKpis(rows), [rows]);
@@ -40,15 +44,35 @@ export function Dashboard({
     () => serieTemporal(rows, periodo === "all" ? 90 : parseInt(periodo, 10)),
     [rows, periodo],
   );
-  const topPa = useMemo(
-    () => contarPorReceita(rows, (r) => r.itens.map((i) => i.principio_ativo ?? "").filter(Boolean)),
+  const topProdutos = useMemo(
+    () => contarItens(rows, (i) => i.nome_comercial || i.principio_ativo),
     [rows],
   );
   const porEspecie = useMemo(
     () => contarPorReceita(rows, (r) => (r.animal_especie ? [r.animal_especie] : [])),
     [rows],
   );
-  const porForma = useMemo(() => contarItens(rows, (i) => i.forma), [rows]);
+  const porFornecedor = useMemo(() => contarItens(rows, (i) => i.fornecedor ?? "Não identificado"), [rows]);
+  const porVeterinario = useMemo(
+    () => contarPorReceita(rows, (r) => (r.vet_nome ? [r.vet_nome] : [])),
+    [rows],
+  );
+  const porCategoria = useMemo(() => contarItens(rows, (i) => i.categoria ?? "Não identificado"), [rows]);
+  const porClinica = useMemo(
+    () => contarPorReceita(rows, (r) => (r.clinica ? [r.clinica] : [])),
+    [rows],
+  );
+
+  async function exportarExcel() {
+    setExportando(true);
+    try {
+      await api.baixarExport();
+    } catch {
+      onToast("Não consegui gerar a planilha. Tente de novo.");
+    } finally {
+      setExportando(false);
+    }
+  }
 
   return (
     <>
@@ -72,21 +96,27 @@ export function Dashboard({
             </button>
           ))}
         </div>
+        <span className="spacer" style={{ flex: 1 }} />
+        <button className="btn-upload" style={{ padding: ".45rem .8rem" }} onClick={exportarExcel} disabled={exportando}>
+          <span aria-hidden>📊</span>&nbsp;{exportando ? "Gerando…" : "Exportar Excel"}
+        </button>
       </div>
 
       <div className="kpis">
         <Kpi val={fmt.format(k.total)} lbl="receitas no período" sub={k.naoConferidas ? `${fmt.format(k.naoConferidas)} não conferidas` : "todas conferidas"} />
-        <Kpi val={fmt.format(k.principiosUnicos)} lbl="princípios ativos únicos" sub={`${fmt.format(k.totalItens)} itens no total`} />
-        <Kpi val={k.total ? fmt1.format(k.itensPorReceita) : "0,0"} lbl="itens por receita" sub="média do período" />
-        <Kpi val={`${k.pctRetencao}%`} lbl="com retenção de receita" sub={`${fmt.format(k.comRetencao)} de controlado`} />
+        <Kpi val={k.total ? fmt1.format(k.itensPorReceita) : "0,0"} lbl="itens por receita" sub={`${fmt.format(k.totalItens)} itens no total`} />
+        <Kpi val={fmt.format(k.produtosDiferentes)} lbl="produtos diferentes" sub="prescritos no período" />
+        <Kpi val={fmt.format(k.veterinariosUnicos)} lbl="veterinários únicos" sub="atenderam no período" />
       </div>
 
       <div className="grid">
         <TimeSeries buckets={serie.buckets} semanal={serie.passoSemanal} />
-        <RankBars titulo="Princípios ativos mais prescritos" sub="por nº de receitas" dados={topPa} limite={6} />
+        <RankBars titulo="Produtos mais prescritos" sub="por nº de vezes" dados={topProdutos} limite={6} />
         <RankBars titulo="Receitas por espécie" dados={porEspecie} limite={5} />
-        <RankBars titulo="Itens por forma farmacêutica" dados={porForma} limite={5} />
-        <Proportion com={k.comRetencao} total={k.total} />
+        <RankBars titulo="Fornecedores mais prescritos" sub="por nº de itens" dados={porFornecedor} limite={6} />
+        <RankBars titulo="Ranking de receitas por veterinário" dados={porVeterinario} limite={6} />
+        <RankBars titulo="Categorias mais prescritas" sub="por nº de itens" dados={porCategoria} limite={6} />
+        <RankBars titulo="Clínica que mais prescreve" dados={porClinica} limite={6} />
         <Tabela rows={rows} onAbrir={onAbrir} />
       </div>
     </>
@@ -125,7 +155,7 @@ function Tabela({ rows, onAbrir }: { rows: Receita[]; onAbrir: (id: string) => v
               </tr>
             )}
             {list.map((r) => {
-              const pa = r.itens.map((i) => i.principio_ativo).filter(Boolean).join(", ") || "(sem itens)";
+              const pa = r.itens.map((i) => i.nome_comercial || i.principio_ativo).filter(Boolean).join(", ") || "(sem itens)";
               const ret = r.itens.some((i) => i.retencao);
               return (
                 <tr key={r.id} tabIndex={0} onClick={() => onAbrir(r.id)} onKeyDown={(e) => e.key === "Enter" && onAbrir(r.id)}>

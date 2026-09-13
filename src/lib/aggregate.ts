@@ -16,24 +16,41 @@ export function filtrar(receitas: Receita[], periodo: Periodo, especie: FiltroEs
 
 export interface Kpis {
   total: number;
-  principiosUnicos: number;
   itensPorReceita: number;
-  pctRetencao: number;
+  produtosDiferentes: number;
+  veterinariosUnicos: number;
   comRetencao: number;
   naoConferidas: number;
   totalItens: number;
 }
 
+// Identidade de um produto para fins de contagem: nome comercial (o que
+// aparece na receita e no catálogo da loja); cai pro princípio ativo só
+// quando a IA não leu nome comercial nenhum.
+function chaveProduto(i: Receita["itens"][number]): string | null {
+  const v = i.nome_comercial || i.principio_ativo;
+  return v ? v.trim().toLowerCase() : null;
+}
+
 export function kpis(rows: Receita[]): Kpis {
+  // nº de itens = nº de linhas de receita_item (um produto prescrito = um
+  // item, não importa a quantidade/dose dispensada dentro dele).
   const totalItens = rows.reduce((a, r) => a + r.itens.length, 0);
-  const pas = new Set<string>();
-  rows.forEach((r) => r.itens.forEach((i) => i.principio_ativo && pas.add(i.principio_ativo.toLowerCase())));
+  const produtos = new Set<string>();
+  const vets = new Set<string>();
+  rows.forEach((r) => {
+    if (r.vet_nome) vets.add(r.vet_nome.trim().toLowerCase());
+    r.itens.forEach((i) => {
+      const k = chaveProduto(i);
+      if (k) produtos.add(k);
+    });
+  });
   const comRetencao = rows.filter((r) => r.itens.some((i) => i.retencao)).length;
   return {
     total: rows.length,
-    principiosUnicos: pas.size,
     itensPorReceita: rows.length ? totalItens / rows.length : 0,
-    pctRetencao: rows.length ? Math.round((comRetencao / rows.length) * 100) : 0,
+    produtosDiferentes: produtos.size,
+    veterinariosUnicos: vets.size,
     comRetencao,
     naoConferidas: rows.filter((r) => !r.conferido).length,
     totalItens,

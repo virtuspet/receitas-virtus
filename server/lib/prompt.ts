@@ -34,7 +34,7 @@ Regras:
 - especie: "Canina"/"Cão" => "Canino"; "Felina"/"Gato" => "Felino". Se não houver, null.
 - crmv: inclua a UF e o número quando existir (ex.: "CRMV-RJ 14983").
 - dataPrescricao: use a data de emissão/assinatura da receita. NÃO use a data de impressão ("Impresso em:").
-- Uma receita costuma ter VÁRIOS medicamentos — devolva um item por medicamento, na ordem em que aparecem.
+- Uma receita costuma ter VÁRIOS medicamentos — devolva um item por medicamento (produto/princípio ativo) DIFERENTE, na ordem em que aparecem. NUNCA duplique o mesmo medicamento em vários itens: se ele aparece mais de uma vez no texto (ex.: dose de manhã e à noite, ou repetido em seções diferentes), ou se vem como "3 comprimidos", "30 unidades" etc., isso é UM item só — a quantidade total vai no campo "quantidade", não em itens repetidos.
 - principioAtivo: o nome do fármaco (ex.: "Ceftriaxona", "Cloridrato de tramadol", "Meloxicam").
 - concentracao: a dose/força indicada (ex.: "30mg/kg", "0,1mg/kg", "250 mg", "500mg/mL").
 - via: "Oral", "Subcutânea", "Intramuscular", "Tópica" etc., conforme o texto ("Uso Injetável", "via subcutânea"...).

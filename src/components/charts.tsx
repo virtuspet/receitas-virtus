@@ -61,6 +61,7 @@ export function RankBars({
   dados: Contagem[];
   limite: number;
 }) {
+  const truncar = (s: string, n = 28) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
   let rows = dados.slice(0, limite);
   const outros = dados.slice(limite).reduce((a, x) => a + x.v, 0);
   if (outros > 0) rows = [...rows, { k: "Outros", v: outros }];
@@ -84,7 +85,10 @@ export function RankBars({
             const w = Math.max(3, (r.v / max) * barMaxW);
             return (
               <g key={r.k}>
-                <text className="bar-lbl" x={barX} y={y + 11}>{r.k}</text>
+                <text className="bar-lbl" x={barX} y={y + 11}>
+                  {truncar(r.k)}
+                  <title>{r.k}</title>
+                </text>
                 <rect x={barX} y={y + 16} width={w} height="9" rx="4" fill="var(--series)" />
                 <text className="bar-val" x={barX + w + 5} y={y + 24}>{r.v}</text>
               </g>

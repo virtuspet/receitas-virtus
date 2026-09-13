@@ -81,4 +81,26 @@ export const api = {
   conferir(id: string, conferido: boolean): Promise<{ ok: boolean }> {
     return req(`/receitas/${id}`, { method: "PATCH", body: JSON.stringify({ conferido }) });
   },
+
+  // Baixa a planilha (não passa por req() porque a resposta não é JSON).
+  async baixarExport(): Promise<void> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const res = await fetch("/api/export", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new ApiError(json.error ?? `Erro ${res.status}`, res.status, json.code);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conexao-360-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };
