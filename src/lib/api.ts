@@ -16,17 +16,38 @@ export class ApiError extends Error {
   }
 }
 
-async function req<T>(path: string, init?: RequestInit): Promise<T> {
+async function req<T>(path: string, init?: RequestInit, timeoutMs = 20_000): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  const res = await fetch(`/api${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, {
+      ...init,
+      signal: ctl.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers ?? {}),
+      },
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new ApiError(
+        "O envio demorou demais e foi cancelado — provavelmente a conexão está lenta. Verifique o Wi-Fi/dados e tente de novo.",
+        0,
+        "client_timeout",
+      );
+    }
+    throw new ApiError(
+      "Não consegui falar com o servidor — verifique sua conexão com a internet e tente de novo.",
+      0,
+      "network_error",
+    );
+  } finally {
+    clearTimeout(timer);
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new ApiError(json.error ?? `Erro ${res.status}`, res.status, json.code);
@@ -41,7 +62,8 @@ export const api = {
   },
 
   extract(base64: string, mimeType: string): Promise<{ dados: ReceitaExtraida; bruto: unknown }> {
-    return req("/extract", { method: "POST", body: JSON.stringify({ base64, mimeType }) });
+    // até 55s: a leitura em si tem até ~48s de prazo no servidor + upload do arquivo
+    return req("/extract", { method: "POST", body: JSON.stringify({ base64, mimeType }) }, 55_000);
   },
 
   listReceitas(desde?: string): Promise<{ receitas: Receita[] }> {

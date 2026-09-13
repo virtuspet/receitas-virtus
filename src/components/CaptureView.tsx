@@ -10,7 +10,7 @@ type Arquivo = { base64: string; mimeType: string };
 type Estado =
   | { fase: "idle" }
   | { fase: "preparando" }
-  | { fase: "lendo"; preview: string | null }
+  | { fase: "lendo"; preview: string | null; tamanhoKB: number }
   | { fase: "erro"; msg: string; podeRepetir: boolean }
   | {
       fase: "form";
@@ -47,6 +47,14 @@ export function CaptureView({
       let arquivo: Arquivo;
       let preview: string | null = null;
       if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
+        if (file.size > 4_000_000) {
+          setEstado({
+            fase: "erro",
+            msg: `Esse PDF tem ${(file.size / 1_000_000).toFixed(1)}MB — grande demais para a leitura automática (limite ~4MB). Tente enviar uma foto da receita em vez do PDF, ou um PDF menor.`,
+            podeRepetir: false,
+          });
+          return;
+        }
         arquivo = { base64: await fileToBase64(file), mimeType: "application/pdf" };
       } else if (file.type.startsWith("image/")) {
         const r = await reduzirImagem(file);
@@ -76,7 +84,8 @@ export function CaptureView({
       });
       return;
     }
-    setEstado({ fase: "lendo", preview });
+    const tamanhoKB = Math.round((arquivo.base64.length * 0.75) / 1024);
+    setEstado({ fase: "lendo", preview, tamanhoKB });
     try {
       const { dados, bruto } = await api.extract(arquivo.base64, arquivo.mimeType);
       setEstado({ fase: "form", dados, bruto, preview, nota: null });
@@ -97,7 +106,8 @@ export function CaptureView({
           ? "Limite de uso da IA atingido. Aguarde um instante e tente de novo."
           : err?.code === "recusado" || err?.code === "sem_json"
             ? "Não consegui ler os dados dessa receita com segurança. Tente uma foto mais nítida ou preencha manualmente."
-            : "Falha temporária na leitura. Tente de novo.";
+            : // mensagens específicas (timeout do cliente, rede, ou texto vindo do servidor)
+              err?.message || "Falha temporária na leitura. Tente de novo.";
       setEstado({ fase: "erro", msg, podeRepetir: true });
     }
   }
@@ -165,7 +175,9 @@ export function CaptureView({
           <div style={{ flex: 1, minWidth: 0 }}>
             <b>{estado.fase === "preparando" ? "Preparando o arquivo…" : "Lendo a receita…"}</b>
             <br />
-            <small>{estado.fase === "lendo" ? "Pode levar até 1 minuto" : "Aguarde"}</small>
+            <small>
+              {estado.fase === "lendo" ? `~${estado.tamanhoKB}KB · pode levar até 1 minuto` : "Aguarde"}
+            </small>
             <div className="bar-track">
               <div className="bar-fill" />
             </div>
