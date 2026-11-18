@@ -1,18 +1,21 @@
 :root {
   color-scheme: light;
-  --plane: #f1f2f0;
+  --plane: #f5f5f2;
   --surface: #ffffff;
-  --surface-2: #f7f7f5;
-  --ink: #1a1a1c;
-  --ink-2: #5b5c59;
-  --ink-muted: #8a8b86;
-  --line: #e2e3de;
-  --line-strong: #c9cac4;
-  --accent: #2a78d6;
-  --accent-ink: #1f5fae;
-  --accent-wash: #e7f0fb;
-  --series: #2a78d6;
-  --series-soft: #cfe1f8;
+  --surface-2: #f7f7f4;
+  --ink: #0b0b0c;
+  --ink-2: #4f5057;
+  --ink-muted: #85868c;
+  --line: #e3e3de;
+  --line-strong: #c8c9c3;
+  --accent: #003eff;
+  --accent-ink: #0032cc;
+  --accent-wash: #e6ecff;
+  --series: #003eff;
+  --series-soft: #c7d4ff;
+  --brand-yellow: #ffc100;
+  --brand-blue: #003eff;
+  --on-yellow: #000000;
   --warn: #b7791a;
   --warn-wash: #f8ecd4;
   --crit: #c0392f;
@@ -24,19 +27,22 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --plane: #0e0e10;
-    --surface: #1a1b1e;
-    --surface-2: #212227;
-    --ink: #f2f2ef;
-    --ink-2: #b6b7b0;
-    --ink-muted: #83847e;
-    --line: #2c2d30;
-    --line-strong: #3b3c40;
-    --accent: #4a90e2;
-    --accent-ink: #8bbcf0;
-    --accent-wash: #17273b;
-    --series: #4a90e2;
-    --series-soft: #25384f;
+    --plane: #0b0b0d;
+  --surface: #17181c;
+  --surface-2: #1f2025;
+  --ink: #f4f4f1;
+  --ink-2: #b8b9b3;
+  --ink-muted: #85868c;
+  --line: #2a2b30;
+  --line-strong: #3a3b41;
+  --accent: #3d6bff;
+  --accent-ink: #9fb6ff;
+  --accent-wash: #141f45;
+  --series: #5c82ff;
+  --series-soft: #1e2b5c;
+  --brand-yellow: #ffc100;
+  --brand-blue: #003eff;
+  --on-yellow: #000000;
     --warn: #e0a94a;
     --warn-wash: #2f2717;
     --crit: #e06a5f;
@@ -47,19 +53,22 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --plane: #0e0e10;
-  --surface: #1a1b1e;
-  --surface-2: #212227;
-  --ink: #f2f2ef;
-  --ink-2: #b6b7b0;
-  --ink-muted: #83847e;
-  --line: #2c2d30;
-  --line-strong: #3b3c40;
-  --accent: #4a90e2;
-  --accent-ink: #8bbcf0;
-  --accent-wash: #17273b;
-  --series: #4a90e2;
-  --series-soft: #25384f;
+  --plane: #0b0b0d;
+  --surface: #17181c;
+  --surface-2: #1f2025;
+  --ink: #f4f4f1;
+  --ink-2: #b8b9b3;
+  --ink-muted: #85868c;
+  --line: #2a2b30;
+  --line-strong: #3a3b41;
+  --accent: #3d6bff;
+  --accent-ink: #9fb6ff;
+  --accent-wash: #141f45;
+  --series: #5c82ff;
+  --series-soft: #1e2b5c;
+  --brand-yellow: #ffc100;
+  --brand-blue: #003eff;
+  --on-yellow: #000000;
   --warn: #e0a94a;
   --warn-wash: #2f2717;
   --crit: #e06a5f;
@@ -69,11 +78,15 @@
 }
 
 * { box-sizing: border-box; }
+button, input, select, textarea { font-family: inherit; }
+h1, h2, h3, .kpi .k-val {
+  font-family: "Poppins", "Nunito Sans", system-ui, sans-serif;
+}
 html, body, #root { margin: 0; min-height: 100%; }
 body {
   background: var(--plane);
   color: var(--ink);
-  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -84,16 +97,15 @@ body {
 
 .appbar {
   position: sticky; top: 0; z-index: 30;
-  background: var(--surface); border-bottom: 1px solid var(--line);
-  padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.6rem;
+  background: var(--brand-yellow); color: var(--on-yellow);
+  padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.7rem;
 }
-.brand { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-.brand .logo {
-  width: 22px; height: 22px; flex: none; border-radius: 50%;
-  background: conic-gradient(from 140deg, var(--accent), #37b7a4, var(--accent));
-}
-.brand h1 { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; margin: 0; white-space: nowrap; }
-.brand span { font-size: 0.7rem; color: var(--ink-muted); white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+.brand .logo { height: 34px; width: auto; flex: none; display: block; }
+.brand h1 { font-weight: 700; font-size: 1.02rem; letter-spacing: -0.01em; margin: 0; white-space: nowrap; }
+.brand span { font-size: 0.72rem; color: rgba(0, 0, 0, 0.68); white-space: nowrap; }
+.appbar .icon-btn { background: rgba(0, 0, 0, 0.08); border-color: transparent; color: var(--on-yellow); }
+.appbar .icon-btn:hover { background: rgba(0, 0, 0, 0.14); }
 .appbar .spacer { flex: 1; }
 .icon-btn {
   appearance: none; border: 1px solid var(--line); background: var(--surface-2);
@@ -257,12 +269,13 @@ table.detail .t-date { font-variant-numeric: tabular-nums; color: var(--ink-2); 
 .toast { position: fixed; left: 50%; bottom: 5rem; transform: translateX(-50%); background: var(--ink); color: var(--plane); padding: 0.6rem 1rem; border-radius: var(--radius); font-size: 0.83rem; font-weight: 600; z-index: 60; box-shadow: var(--card-shadow); }
 .empty { text-align: center; color: var(--ink-muted); font-size: 0.85rem; padding: 2rem 1rem; }
 
-.login { max-width: 340px; margin: 12vh auto 0; padding: 0 1.2rem; }
-.login h1 { font-size: 1.3rem; margin: 0 0 0.2rem; }
+.login { max-width: 340px; margin: 10vh auto 0; padding: 0 1.2rem; }
+.login .login-logo { width: 112px; height: 112px; border-radius: 22px; display: block; margin: 0 0 1.2rem; box-shadow: var(--card-shadow); }
+.login h1 { font-size: 1.4rem; font-weight: 700; margin: 0 0 0.2rem; }
 .login p { color: var(--ink-2); font-size: 0.88rem; margin: 0 0 1.4rem; }
 .login form { display: grid; gap: 0.7rem; }
 .login input { font: inherit; padding: 0.65rem 0.7rem; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); color: var(--ink); }
-.login button { appearance: none; border: none; background: var(--accent); color: #fff; padding: 0.7rem; border-radius: var(--radius); font-weight: 600; font: inherit; cursor: pointer; }
+.login button { appearance: none; border: none; background: var(--accent); color: #fff; padding: 0.7rem; border-radius: var(--radius); font: inherit; font-weight: 700; cursor: pointer; }
 .login .err { color: var(--crit); font-size: 0.82rem; }
 
 button:focus-visible, .rec:focus-visible, .tab:focus-visible, tr:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

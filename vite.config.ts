@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon.svg"],
+      includeAssets: ["favicon.png", "apple-touch-icon.png", "logo-virtus.png"],
       manifest: {
         name: "Receitas Virtus Pet",
         short_name: "Receitas VP",
@@ -18,13 +18,12 @@ export default defineConfig({
         lang: "pt-BR",
         start_url: "/",
         display: "standalone",
-        background_color: "#f1f2f0",
-        theme_color: "#2a78d6",
+        background_color: "#ffc100",
+        theme_color: "#ffc100",
         icons: [
-          { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
           { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
@@ -34,6 +33,17 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/api"),
             handler: "NetworkOnly",
+          },
+          {
+            // Fontes do Google (Poppins / Nunito Sans) — guardadas para uso offline
+            urlPattern: ({ url }) =>
+              url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
         ],
       },

@@ -18,6 +18,7 @@ export function Login() {
 
   return (
     <div className="login">
+      <img className="login-logo" src="/icon-192.png" alt="Virtus Pet" />
       <h1>Receitas Virtus Pet</h1>
       <p>Entre com a conta da loja para registrar e acompanhar as receitas.</p>
       <form onSubmit={entrar}>

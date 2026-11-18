@@ -78,7 +78,7 @@ export function App() {
     <div className="app">
       <div className="appbar">
         <span className="brand">
-          <span className="logo" aria-hidden />
+          <img className="logo" src="/logo-virtus.png" alt="Virtus Pet" />
           <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
             <h1>Receitas Virtus Pet</h1>
             <span>Receitas veterinárias · loja</span>
