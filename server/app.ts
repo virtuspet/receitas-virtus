@@ -103,7 +103,7 @@ app.get("/export", async (c) => {
   const buf = await gerarExportXlsx(data as Receita[]);
   const hoje = new Date().toISOString().slice(0, 10);
   c.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  c.header("Content-Disposition", `attachment; filename="conexao-360-${hoje}.xlsx"`);
+  c.header("Content-Disposition", `attachment; filename="receitas-virtus-pet-${hoje}.xlsx"`);
   return c.body(new Uint8Array(buf));
 });
 

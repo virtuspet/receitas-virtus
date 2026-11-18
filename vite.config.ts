@@ -12,8 +12,8 @@ export default defineConfig({
       injectRegister: "auto",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "Conexão 360",
-        short_name: "Conexão 360",
+        name: "Receitas Virtus Pet",
+        short_name: "Receitas VP",
         description: "Leitura e análise de receitas veterinárias da loja",
         lang: "pt-BR",
         start_url: "/",

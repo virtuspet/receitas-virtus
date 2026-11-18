@@ -1,4 +1,4 @@
-# Conexão 360
+# Receitas Virtus Pet
 
 App interno para **quantificar e analisar as receitas veterinárias** que chegam na loja.
 O lojista fotografa ou envia a receita, a IA extrai os campos e o painel (estilo Power BI)

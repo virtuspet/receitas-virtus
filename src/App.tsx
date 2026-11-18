@@ -80,7 +80,7 @@ export function App() {
         <span className="brand">
           <span className="logo" aria-hidden />
           <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-            <h1>Conexão 360</h1>
+            <h1>Receitas Virtus Pet</h1>
             <span>Receitas veterinárias · loja</span>
           </span>
         </span>

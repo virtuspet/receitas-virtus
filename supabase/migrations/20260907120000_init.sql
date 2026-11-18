@@ -1,4 +1,4 @@
--- Conexão 360 — esquema inicial
+-- Receitas Virtus Pet — esquema inicial
 -- Ferramenta interna: qualquer usuário autenticado enxerga e edita tudo.
 
 create extension if not exists "pgcrypto";

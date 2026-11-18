@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy do Conexão 360 na Vercel.
+# Deploy do Receitas Virtus Pet na Vercel.
 # Pré-requisito: `npx vercel login` (uma vez).
 # Uso: bash scripts/deploy-vercel.sh
 set -euo pipefail

@@ -9,7 +9,7 @@ function fmtData(v: string | null): string {
 
 export async function gerarExportXlsx(receitas: Receita[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Conexão 360";
+  wb.creator = "Receitas Virtus Pet";
   wb.created = new Date();
 
   // ---------- aba: Receitas (uma linha por receita) ----------

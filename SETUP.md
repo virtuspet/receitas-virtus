@@ -1,4 +1,4 @@
-# Setup — Conexão 360
+# Setup — Receitas Virtus Pet
 
 Passo a passo do zero até rodar localmente e publicar. Tempo estimado: 30–45 min.
 
@@ -29,7 +29,7 @@ npm -v
 ## 2. Instalar as dependências
 
 ```bash
-cd conexao-360
+cd receitas-virtus-pet
 npm install
 ```
 
